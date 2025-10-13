@@ -45,22 +45,16 @@ namespace cyclone {
 		Vector3 gravity;
 	public:
 		ParticleGravity(const Vector3& gravity);
-
 		virtual void updateForce(Particle* particle, real duration);
 	};
 
 	// Particle generator that apply drag
 	class ParticleDrag : public ParticleForceGenerator {
-		// Velocity drag coefficient
-		real k1;
-
-		// Velocity squared drag coefficient
-		real k2;
+		real k1; // Velocity drag coefficient
+		real k2; // Velocity squared drag coefficient
 
 	public:
-		// Creates the generator with the given forces
 		ParticleDrag(real k1, real k2);
-
 		virtual void updateForce(Particle* particle, real duration);
 
 	};
@@ -73,9 +67,42 @@ namespace cyclone {
 
 	public:
 		ParticleSpring(Particle* other, real springConstant, real restLength);
+		virtual void updateForce(Particle* particle, real duration);
+	};
 
-		// Applies the spring force to the given particle
+	// Force generator that applied a spring forcem where one end is attached to a fixed point in space
+	class ParticleAnchoredSpring : public ParticleForceGenerator {
+		Vector3* anchor; 		// Location of the anchored end of the spring
+		real springConstant;
+		real restLength;
+
+	public:
+		ParticleAnchoredSpring(Vector3* anchor, real springConstant, real restLength);
+		virtual void updateForce(Particle* particle, real duration);
+	};
+
+	// Force generator that applies a bungee force
+	class ParticleBungee : ParticleForceGenerator {
+		Particle* other; // Particle at the other end of the spring
+		real springConstant;
+		real restLength;
+
+	public:
+		ParticleBungee(Particle* other, real springConstant, real restLength);
+		virtual void updateForce(Particle* particle, real duration);
+	};
+
+	// Force generator that applies a buoyancy force
+	class ParticleBuoyancy : public ParticleForceGenerator {
+		real maxDepth; // max depth of the object before it is fully submerged
+		real volume;
+		real waterHeight;
+		real liquidDensity; // Density of the liquid (water = 1000kg/m^3)
+
+	public:
+		ParticleBuoyancy(real maxDepth, real volume, real waterHeight, real liquidDensity = 1000.0f);
 		virtual void updateForce(Particle* particle, real duration);
 	};
 }
+
 #endif// CYCLONE_CORE_H
