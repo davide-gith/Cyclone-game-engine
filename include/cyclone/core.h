@@ -140,6 +140,65 @@ namespace cyclone {
 		}
 	};
 
+	class Quaternion {
+	public:
+		union {
+			struct {
+				real r; // Real component
+				real i; // First complex component
+				real j; // Second complex component
+				real k; // Third complex component
+			};
+			real data[4];
+		};
+		Quaternion() : r(1), i(0), j(0), k(0) {}
+
+		Quaternion(const real r, const real i, const real j, const real k) : r(r), i(i), j(j), k(k)
+		{
+		}
+
+		void normalize() {
+			real d = r * r + i * i + j * j + k * k;
+
+			if (d == 0) {
+				r = 1;
+				return;
+			}
+
+			d = ((real)1.0) / real_sqrt(d);
+
+			r *= d;
+			i *= d;
+			j *= d;
+			k *= d;
+		}
+
+		void operator*=(const Quaternion& multiplier) {
+			Quaternion q = *this;
+
+			r = q.r * multiplier.r - q.i * multiplier.i - q.j * multiplier.j - q.k * multiplier.k;
+			i = q.r * multiplier.i - q.i * multiplier.r + q.j * multiplier.k - q.k * multiplier.j;
+			j = q.r * multiplier.j + q.j * multiplier.r + q.k * multiplier.i - q.i * multiplier.k;
+			k = q.r * multiplier.k + q.k * multiplier.r + q.i * multiplier.j - q.j * multiplier.i;
+		}
+
+		void rotateByVector(const Vector3& vector)
+		{
+			Quaternion q(0, vector.x, vector.y, vector.z);
+			(*this) *= q;
+		}
+
+		void addScaledVector(const Vector3& vector, real scale) {
+			Quaternion q(0, vector.x * scale, vector.y * scale, vector.z * scale);
+
+			q *= *this;
+			r += q.r * ((real)0.5);
+			i += q.i * ((real)0.5);
+			j += q.j * ((real)0.5);
+			k += q.k * ((real)0.5);
+		}
+	};
+
 
 	// A 3x3 matrix
 	class Matrix3 {
@@ -234,6 +293,19 @@ namespace cyclone {
 			result.setTranspose(*this);
 			return result;
 		}
+
+		// Convert a quaternion to a matrix
+		void setOrientation(const Quaternion& q) {
+			data[0] = 1 - (2 * q.j * q.j + 2 * q.k * q.k);
+			data[1] = 2 * q.i * q.j + 2 * q.k * q.r;
+			data[2] = 2 * q.i * q.k - 2 * q.j * q.r;
+			data[3] = 2 * q.i * q.j - 2 * q.k * q.r;
+			data[4] = 1 - (2 * q.i * q.i + 2 * q.k * q.k);
+			data[5] = 2 * q.j * q.k + 2 * q.i * q.r;
+			data[6] = 2 * q.i * q.k + 2 * q.j * q.r;
+			data[7] = 2 * q.j * q.k - 2 * q.i * q.r;
+			data[8] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
+		}
 	};
 
 	// a 3x4 matrix
@@ -291,7 +363,61 @@ namespace cyclone {
 		void invert() {
 			setInverse(*this);
 		}
-	};
 
+		Vector3 transformInverse(const Vector3& vector) const
+		{
+			Vector3 tmp = vector;
+			tmp.x -= data[3];
+			tmp.y -= data[7];
+			tmp.z -= data[11];
+			return Vector3(
+				tmp.x * data[0] +
+				tmp.y * data[4] +
+				tmp.z * data[8],
+
+				tmp.x * data[1] +
+				tmp.y * data[5] +
+				tmp.z * data[9],
+
+				tmp.x * data[2] +
+				tmp.y * data[6] +
+				tmp.z * data[10]
+			);
+		}
+
+		Vector3 transformDirection(const Vector3& vector) const
+		{
+			return Vector3(
+				vector.x * data[0] +
+				vector.y * data[1] +
+				vector.z * data[2],
+
+				vector.x * data[4] +
+				vector.y * data[5] +
+				vector.z * data[6],
+
+				vector.x * data[8] +
+				vector.y * data[9] +
+				vector.z * data[10]
+			);
+		}
+
+		void setorientationAndPos(const Quaternion& q, const Vector3& pos) {
+			data[0] = 1 - (2 * q.j * q.j + 2 * q.k * q.k);
+			data[1] = 2 * q.i * q.j + 2 * q.k * q.r;
+			data[2] = 2 * q.i * q.k - 2 * q.j * q.r;
+			data[3] = pos.x;
+
+			data[4] = 2 * q.i * q.j - 2 * q.k * q.r;
+			data[5] = 1 - (2 * q.i * q.i + 2 * q.k * q.k);
+			data[6] = 2 * q.j * q.k + 2 * q.i * q.r;
+			data[7] = pos.y;
+
+			data[8] = 2 * q.i * q.k + 2 * q.j * q.r;
+			data[9] = 2 * q.j * q.k - 2 * q.i * q.r;
+			data[10] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
+			data[11] = pos.z;
+		}
+	};
 }
 #endif// CYCLONE_CORE_H
