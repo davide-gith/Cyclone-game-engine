@@ -36,10 +36,10 @@
     <ClCompile Include="src\particle.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\demos\ballistic\ballistic.cpp">
-      <Filter>Source Files\src\demos\ballistic</Filter>
-    </ClCompile>
     <ClCompile Include="src\pfgen.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
   </ItemGroup>

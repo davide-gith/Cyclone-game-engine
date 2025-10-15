@@ -135,7 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\demos\ballistic\ballistic.cpp" />
+    <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\particle.cpp" />
     <ClCompile Include="src\pfgen.cpp" />
   </ItemGroup>
